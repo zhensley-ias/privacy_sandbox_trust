@@ -51,15 +51,20 @@ int issue(char *argv[]) {
     auto request_base64 = argv[2];
     size_t request_base64_len = strlen(request_base64);
 
+    std::string privKeyPath = std::string(argv[3]);
+    std::string pubKeyPath = std::string(argv[4]);
+    std::string ssrPrivKeyPath = std::string(argv[5]);
+    std::string ssrPubKeyPath = std::string(argv[6]);
+
     std::vector<unsigned char> requestBase64;
     requestBase64.resize(request_base64_len);
     memcpy(requestBase64.data(), request_base64, request_base64_len);
 
     auto issueResult = ias::Issuer::issue(requestBase64, {
-        "./keys/priv_key.txt",
-        "./keys/pub_key.txt",
-        "./keys/ssr_priv_key.txt",
-        "./keys/ssr_pub_key.txt"
+        privKeyPath,
+        pubKeyPath,
+        ssrPrivKeyPath,
+        ssrPubKeyPath
     });
 
     if (!issueResult) {
@@ -82,8 +87,8 @@ int main(int argc, char *argv[]) {
         return keygen();
     }
     else if(strcmp(flag, FLAG_ISSUE) == 0) {
-        if(argc < 3) {
-            fprintf(stderr, "argument error, expected 3 arguments\n");
+        if(argc < 7) {
+            fprintf(stderr, "argument error, expected 7 arguments\n");
             return EXIT_FAILURE;
         }
         return issue(argv);
