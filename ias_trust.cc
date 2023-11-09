@@ -24,6 +24,14 @@ int keygen() {
         return EXIT_FAILURE;
     }
 
+    auto privKeyData = keys.privKey;
+    auto privKeyDataChar = reinterpret_cast<char*>(privKeyData.data());
+    spdlog::info("Writing priv key to file: {}", privKeyDataChar);
+
+    auto pubKeyData = keys.pubKey;
+    auto pubKeyDataChar = reinterpret_cast<char*>(pubKeyData.data());
+    spdlog::info("Writing pub key to file: {}", pubKeyDataChar);
+
     // save to file
     std::vector<unsigned char> priv_key_base64;
 

@@ -14,6 +14,7 @@ std::vector<unsigned char> Util::read_file(const std::string& fileName) {
 bool Util::writeFile(const std::string &fileName, std::vector<unsigned char> buffer) {
     std::ofstream output(fileName, std::ios::binary);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(output));
+    output.flush();
     return output.good();
 }
 
