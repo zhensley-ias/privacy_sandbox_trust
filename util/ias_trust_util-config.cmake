@@ -1,14 +1,14 @@
 # Find our dependent libs
-#list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/deps)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/deps ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/deps)
 set(BORINGSSL_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/boringssl)
-#set(BORINGSSL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps)
+
 find_package(BORINGSSL REQUIRED)
 find_package(Threads REQUIRED)
 
 set(spdlog_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/spdlog/build)
 find_package(spdlog REQUIRED)
 
+message("BORINGSSL_LIBRARIES: ${BORINGSSL_LIBRARIES}")
 set(dep_libs ${BORINGSSL_LIBRARIES} Threads::Threads spdlog::spdlog)
 set(dep_includes ${BORINGSSL_INCLUDE_DIR})
 
