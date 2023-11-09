@@ -8,6 +8,7 @@
 #include "config.h"
 #include "util.h"
 #include <memory>
+#include <cstring>
 
 
 namespace ias {
