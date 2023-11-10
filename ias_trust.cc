@@ -74,7 +74,7 @@ int issue(char *argv[]) {
 
     auto issueData = issueResult->getIssueData();
     auto issueDataChar = reinterpret_cast<char*>(issueData.data());
-    spdlog::info("ISSUE RESPONSE({}): {}\n\n", issueData.size(), issueDataChar);
+    spdlog::info("ISSUE RESPONSE({}): {}", issueData.size(), issueDataChar);
 
     return EXIT_SUCCESS;
 }
