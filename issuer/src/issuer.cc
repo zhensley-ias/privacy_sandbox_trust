@@ -4,8 +4,18 @@
 
 namespace ias {
 
-std::shared_ptr<TT> Issuer::issue(std::vector<unsigned char> request_base64, const KeyConfig &keyConfig) {
-    auto request = decodeRequest(std::move(request_base64));
+std::shared_ptr<TT> Issuer::issue(uint8_t* request_base64, size_t request_base64Length, const KeyConfig &keyConfig) {
+    auto issueDataChar = reinterpret_cast<char*>(request_base64);
+    fprintf(stderr, "ISSUE REQUEST(%ld): %s\n\n",request_base64Length, issueDataChar);
+
+    size_t request_len;
+    uint8_t* request;
+    auto decodeResult = decodeRequest(request_base64, request_base64Length, &request, &request_len);
+    if(!decodeResult) {
+        fprintf(stderr, "failed to decode base64\n");
+        return nullptr;
+    }
+
     auto tt = setupIssuer(keyConfig);
     if(!tt) {
         fprintf(stderr, "failed to setup issuer\n");
@@ -21,14 +31,12 @@ std::shared_ptr<TT> Issuer::issue(std::vector<unsigned char> request_base64, con
     }
 
     // Issue a token based on the request
-    tt->issue(request);
+    tt->issue(request, request_len);
 
     return tt;
 }
 
 std::shared_ptr<TT> Issuer::setupIssuer(const KeyConfig &keyConfig) {
-    const TRUST_TOKEN_METHOD *method = TRUST_TOKEN_pst_v1_voprf();
-
     // Create the TT issuer
     auto tt = std::make_shared<TT>();
     if(tt->isFailed()) {
@@ -36,22 +44,24 @@ std::shared_ptr<TT> Issuer::setupIssuer(const KeyConfig &keyConfig) {
     }
 
     // Create the private key (read the file, decode it)
-    auto privKeyBase64 = Util::read_file(keyConfig.privKeyPath);
-    if(privKeyBase64.empty()) {
+    size_t priv_key_base64_size;
+    uint8_t *priv_key_base64;
+    auto readResult = Util::read_file(keyConfig.privKeyPath, &priv_key_base64, &priv_key_base64_size);
+    if(!readResult) {
         fprintf(stderr, "failed to read file\n");
         return nullptr;
     }
 
-    size_t actualDecodedLength;
-    auto privKey = Util::base64_decode(privKeyBase64, privKeyBase64.size() - 1 /*-1 for ending NUL on key*/, actualDecodedLength);
-    privKey.resize(actualDecodedLength);
-    if(privKey.empty()) {
+    size_t priv_key_base64_len = priv_key_base64_size - 1;
+    size_t priv_key_len;
+    uint8_t* priv_key;
+    if (!Util::base64_decode(priv_key_base64, priv_key_base64_len, &priv_key, &priv_key_len)) {
         fprintf(stderr, "failed to decode base64\n");
         return nullptr;
     }
 
     // 5. Add Private Key to Issuer
-    tt->addPrivKey(privKey);
+    tt->addPrivKey(priv_key, priv_key_len);
 
     if(tt->isFailed()) {
         return nullptr;
@@ -60,9 +70,8 @@ std::shared_ptr<TT> Issuer::setupIssuer(const KeyConfig &keyConfig) {
     return tt;
 }
 
-std::vector<unsigned char> Issuer::decodeRequest(std::vector<unsigned char> request_base64) {
-    size_t actualDecodedLength;
-    return Util::base64_decode(request_base64, actualDecodedLength);
+bool Issuer::decodeRequest(uint8_t* request_base64, size_t request_base64Length, uint8_t** outRequest, size_t *outLength) {
+    return Util::base64_decode(request_base64, request_base64Length, outRequest, outLength);
 }
 
 TT::TT() {
@@ -75,16 +84,16 @@ TT::TT() {
     }
 }
 
-void TT::addPrivKey(std::vector<unsigned char> privKey) {
+void TT::addPrivKey(uint8_t* privKey, size_t privKeyLength) {
     if(this->issuer) {
-        if(!TRUST_TOKEN_ISSUER_add_key(this->issuer, privKey.data(), privKey.size())) {
+        if(!TRUST_TOKEN_ISSUER_add_key(this->issuer, privKey, privKeyLength)) {
             fprintf(stderr, "failed to add key in TRUST_TOKEN Issuer.\n");
             setFailed(true);
         }
     }
 }
 
-void TT::issue(std::vector<unsigned char> request) {
+void TT::issue(uint8_t* request, size_t requestLength) {
     if(this->issuer != nullptr) {
         uint8_t* response = nullptr;
         size_t   response_len, tokens_issued;
@@ -94,7 +103,7 @@ void TT::issue(std::vector<unsigned char> request) {
         if (!TRUST_TOKEN_ISSUER_issue(this->issuer,
                                       &response, &response_len,
                                       &tokens_issued,
-                                      request.data(), request.size(),
+                                      request, requestLength,
                                       public_metadata,
                                       private_metadata,
                                       max_issuance)) {
@@ -102,13 +111,12 @@ void TT::issue(std::vector<unsigned char> request) {
             return;
         }
 
-        // encode issue response into Base64
-        issueData.resize(response_len);
-        memcpy(issueData.data(), response, response_len);
-        issueData = Util::base64_encode(issueData);
+        fprintf(stderr, "response before encoding(%ld): %s\n\n", response_len, response);
 
-        if(issueData.empty()) {
+        // encode response into Base64
+        if (!Util::base64_encode(response, response_len, &response_base64, &response_base64_len)) {
             fprintf(stderr, "fail to encode base64\n");
+            return;
         }
     }
 }

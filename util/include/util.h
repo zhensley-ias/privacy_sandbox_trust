@@ -9,15 +9,15 @@ namespace ias {
 struct KeyConfig {
     std::string privKeyPath, pubKeyPath, srrPrivKeyPath, srrPubKeyPath;
 };
-
 class Util {
 public:
-    static std::vector<unsigned char> read_file(const std::string& fileName);
-    static bool writeFile(const std::string& fileName, std::vector<unsigned char> buffer);
+    static bool read_file(const std::string& file_name, uint8_t **file_body, size_t *file_size);
+    static bool writeFile(char *file_name, uint8_t *file_body, size_t file_size);
 
-    static std::vector<unsigned char> base64_encode(std::vector<unsigned char> buffer);
-    static std::vector<unsigned char> base64_decode(std::vector<unsigned char> buffer, size_t& actualOutLength);
-    static std::vector<unsigned char> base64_decode(std::vector<unsigned char> buffer, size_t bufferSizeOveride, size_t& actualOutLength);
+    static bool base64_encode(uint8_t *buff, size_t buff_len,
+                                   uint8_t **out, size_t *out_len);
+    static bool base64_decode(uint8_t *buff, size_t buff_len,
+                                   uint8_t **out, size_t *out_len);
 };
 
 }

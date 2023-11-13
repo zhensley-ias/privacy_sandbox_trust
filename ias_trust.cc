@@ -24,22 +24,22 @@ int keygen() {
         return EXIT_FAILURE;
     }
 
-    auto privKeyData = keys.privKey;
-    auto privKeyDataChar = reinterpret_cast<char*>(privKeyData.data());
+    auto privKeyData = keys.privKeyB64;
+    auto privKeyDataChar = reinterpret_cast<char*>(privKeyData);
     spdlog::info("Writing priv key to file: {}", privKeyDataChar);
 
-    auto pubKeyData = keys.pubKey;
-    auto pubKeyDataChar = reinterpret_cast<char*>(pubKeyData.data());
+    auto pubKeyData = keys.pubKeyB64;
+    auto pubKeyDataChar = reinterpret_cast<char*>(pubKeyData);
     spdlog::info("Writing pub key to file: {}", pubKeyDataChar);
 
     // save to file
     std::vector<unsigned char> priv_key_base64;
 
-    if (!ias::Util::writeFile("./keys/priv_key.txt", keys.privKey)) {
+    if (!ias::Util::writeFile("./keys/priv_key.txt", keys.privKeyB64, keys.privKeyB64Len)) {
         fprintf(stderr, "failed to write key\n");
         return EXIT_FAILURE;
     }
-    if (!ias::Util::writeFile("./keys/pub_key.txt", keys.pubKey)) {
+    if (!ias::Util::writeFile("./keys/pub_key.txt", keys.pubKeyB64, keys.pubKeyB64Len)) {
         fprintf(stderr, "failed to write key\n");
         return EXIT_FAILURE;
     }
@@ -48,19 +48,15 @@ int keygen() {
 }
 
 int issue(char *argv[]) {
-    auto request_base64 = argv[2];
-    size_t request_base64_len = strlen(request_base64);
+    auto request_base64 = reinterpret_cast<uint8_t *>(argv[2]);
+    size_t request_base64_len = strlen(argv[2]);
 
     std::string privKeyPath = std::string(argv[3]);
     std::string pubKeyPath = std::string(argv[4]);
     std::string ssrPrivKeyPath = std::string(argv[5]);
     std::string ssrPubKeyPath = std::string(argv[6]);
 
-    std::vector<unsigned char> requestBase64;
-    requestBase64.resize(request_base64_len);
-    memcpy(requestBase64.data(), request_base64, request_base64_len);
-
-    auto issueResult = ias::Issuer::issue(requestBase64, {
+    auto issueResult = ias::Issuer::issue(request_base64, request_base64_len, {
         privKeyPath,
         pubKeyPath,
         ssrPrivKeyPath,
@@ -72,9 +68,9 @@ int issue(char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    auto issueData = issueResult->getIssueData();
-    auto issueDataChar = reinterpret_cast<char*>(issueData.data());
-    fprintf(stderr, "ISSUE RESPONSE(%ld): %s\n\n", issueData.size(), issueDataChar); // used as log info
+    auto issueData = issueResult->getResponseBase64();
+    auto issueDataChar = reinterpret_cast<char*>(issueData);
+    fprintf(stderr, "ISSUE RESPONSE(%ld): %s\n\n", issueResult->getResponseBase64Len(), issueDataChar); // used as log info
     printf("%s", issueDataChar); // used as response (stdout)
 
     return EXIT_SUCCESS;

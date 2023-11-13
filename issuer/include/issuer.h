@@ -17,7 +17,11 @@ class TT {
 private:
     bool failed{false};
     TRUST_TOKEN_ISSUER* issuer{nullptr};
-    std::vector<unsigned char> issueData;
+    uint8_t* issueData;
+    size_t issueDataLength;
+
+    uint8_t* response_base64;
+    size_t response_base64_len;
 
     inline void setFailed(bool f) {
         this->failed = f;
@@ -40,21 +44,32 @@ public:
         return issuer;
     }
 
-    inline std::vector<unsigned char> getIssueData() {
+    inline uint8_t* getIssueData() {
         return issueData;
     }
 
-    void addPrivKey(std::vector<unsigned char> privKey);
-    void issue(std::vector<unsigned char> request);
+    inline size_t getIssueDataLenght() {
+        return issueDataLength;
+    }
+
+    inline uint8_t* getResponseBase64() {
+        return response_base64;
+    }
+    inline size_t getResponseBase64Len() {
+        return response_base64_len;
+    }
+
+    void addPrivKey(uint8_t* privKey, size_t privKeyLength);
+    void issue(uint8_t* request, size_t requestLength);
 };
 
 class Issuer {
 private:
-    static std::vector<unsigned char> decodeRequest(std::vector<unsigned char> request_base64);
+    static bool decodeRequest(uint8_t* request_base64, size_t request_base64Length, uint8_t** outRequest, size_t *outLength);
     static std::shared_ptr<TT> setupIssuer(const KeyConfig &keyConfig);
 
 public:
-    static std::shared_ptr<TT> issue(std::vector<unsigned char> request_base64, const KeyConfig &keyConfig);
+    static std::shared_ptr<TT> issue(uint8_t* request_base64, size_t request_base64Length, const KeyConfig &keyConfig);
 };
 
 }
