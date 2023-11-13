@@ -4,6 +4,7 @@
 #include "keygen.h"
 #include "util.h"
 #include "issuer.h"
+#include "redeemer.h"
 #include <spdlog/spdlog.h>
 
 #define FLAG_ISSUE  "--issue"
@@ -76,6 +77,38 @@ int issue(char *argv[]) {
     return EXIT_SUCCESS;
 }
 
+int redeem(char *argv[]) {
+    auto request_base64 = reinterpret_cast<uint8_t *>(argv[2]);
+    size_t request_base64_len = strlen(argv[2]);
+
+    std::string privKeyPath = std::string(argv[3]);
+    std::string pubKeyPath = std::string(argv[4]);
+    std::string ssrPrivKeyPath = std::string(argv[5]);
+    std::string ssrPubKeyPath = std::string(argv[6]);
+
+    std::vector<uint8_t> rb64;
+    rb64.resize(request_base64_len);
+    memcpy(rb64.data(), request_base64, request_base64_len);
+
+    auto redeemResult = ias::Redeemer::redeem(rb64, {
+            privKeyPath,
+            pubKeyPath,
+            ssrPrivKeyPath,
+            ssrPubKeyPath
+    });
+
+    if (!redeemResult.empty()) {
+        fprintf(stderr, "failed to redeem\n");
+        return EXIT_FAILURE;
+    }
+
+    auto redeemResultChar = reinterpret_cast<char*>(redeemResult.data());
+    fprintf(stderr, "ISSUE RESPONSE(%ld): %s\n\n", redeemResult.size(), redeemResultChar); // used as log info
+    printf("%s", redeemResultChar); // used as response (stdout)
+
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[]) {
     char *flag = argv[1];
 
@@ -89,6 +122,13 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
         return issue(argv);
+    }
+    else if(strcmp(flag, FLAG_REDEEM) == 0) {
+        if(argc < 7) {
+            fprintf(stderr, "argument error, expected 7 arguments\n");
+            return EXIT_FAILURE;
+        }
+        return redeem(argv);
     }
 
     fprintf(stderr, "argument error\n");

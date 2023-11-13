@@ -19,10 +19,10 @@ if(NOT TARGET ias_trust_issuer)
     find_package(ias_trust_issuer)
 endif()
 
-#if(NOT TARGET ias_trust_redeemer)
-#    set(ias_trust_redeemer_DIR ${CMAKE_CURRENT_LIST_DIR}/redeemer)
-#    find_package(ias_trust_redeemer)
-#endif()
+if(NOT TARGET ias_trust_redeemer)
+    set(ias_trust_redeemer_DIR ${CMAKE_CURRENT_LIST_DIR}/redeemer)
+    find_package(ias_trust_redeemer)
+endif()
 
 
 add_executable(ias_trust)
@@ -31,11 +31,13 @@ target_link_libraries(ias_trust PUBLIC
         ${ias_trust_util_LIBRARIES}
         ${ias_trust_keygen_LIBRARIES}
         ${ias_trust_issuer_LIBRARIES}
+        ${ias_trust_redeemer_LIBRARIES}
 )
 target_include_directories(ias_trust PUBLIC
         ${ias_trust_util_INCLUDE_DIRS}
         ${ias_trust_keygen_INCLUDE_DIRS}
         ${ias_trust_issuer_INCLUDE_DIRS}
+        ${ias_trust_redeemer_INCLUDE_DIRS}
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/keys)
