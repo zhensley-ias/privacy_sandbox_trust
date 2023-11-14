@@ -6,6 +6,7 @@
 #include <csignal>
 #include "util.h"
 #include "config.h"
+#include <unistd.h>
 
 namespace ias {
 
