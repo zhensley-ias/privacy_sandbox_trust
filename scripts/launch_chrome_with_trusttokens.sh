@@ -16,8 +16,13 @@ if [ "$discovered_token" != "" ]; then
   default_token="$discovered_token"
 fi
 
+commitments="{ \"https://trust-token-server.com\": { \"PrivateStateTokenV1VOPRF\": { \"protocol_version\": \"PrivateStateTokenV1VOPRF\", \"id\": 1, \"batchsize\": 1, \"keys\": { \"1\": { \"Y\": \"$default_token\", \"expiry\": \"1715356984440000\" } } } } }"
+
+# grab our commitments object, convert to string
+commitmentObj=$(curl --insecure https://trust-token-server.com/trust-token-server/.well-known/private-state-token/key-commitment | jq -c '{"https://trust-token-server.com": .}')
+echo "commitmentObj: $commitmentObj"
+
 open -a Google\ Chrome \
   --args \
   --enable-blink-features=PrivateStateTokens,PrivateStateTokensAlwaysAllowIssuance,PrivacySandboxSettings3 \
-  --additional-private-state-token-key-commitments='{ "https://trust-token-server.com": { "PrivateStateTokenV1VOPRF": { "protocol_version": "PrivateStateTokenV1VOPRF", "id": 1, "batchsize": 1, "keys": { "1": { "Y": "'$default_token'", "expiry": "1715356984440000" } } } } }'
-
+  --additional-private-state-token-key-commitments="$commitmentObj"
