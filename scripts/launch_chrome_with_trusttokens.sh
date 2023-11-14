@@ -9,6 +9,13 @@ if [ "$1" != "" ]; then
   default_token="$1"
 fi
 
+discovered_token=$(docker exec -it trust-token-server cat /home/node/privacy_sandbox_trust/cmake-build-debug/keys/pub_key.txt)
+echo "discovered_token: $discovered_token"
+
+if [ "$discovered_token" != "" ]; then
+  default_token="$discovered_token"
+fi
+
 open -a Google\ Chrome \
   --args \
   --enable-blink-features=PrivateStateTokens,PrivateStateTokensAlwaysAllowIssuance,PrivacySandboxSettings3 \

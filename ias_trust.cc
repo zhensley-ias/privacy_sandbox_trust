@@ -97,7 +97,7 @@ int redeem(char *argv[]) {
             ssrPubKeyPath
     });
 
-    if (!redeemResult.empty()) {
+    if (redeemResult.empty()) {
         fprintf(stderr, "failed to redeem\n");
         return EXIT_FAILURE;
     }
