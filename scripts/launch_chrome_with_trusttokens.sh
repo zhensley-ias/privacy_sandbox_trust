@@ -18,8 +18,11 @@ fi
 
 commitments="{ \"https://trust-token-server.com\": { \"PrivateStateTokenV1VOPRF\": { \"protocol_version\": \"PrivateStateTokenV1VOPRF\", \"id\": 1, \"batchsize\": 1, \"keys\": { \"1\": { \"Y\": \"$default_token\", \"expiry\": \"1715356984440000\" } } } } }"
 
+#TEST_ISSUER="https://ias_test_host.com"
+TEST_ISSUER="https://trust-token-server.com"
+
 # grab our commitments object, convert to string
-commitmentObj=$(curl --insecure https://trust-token-server.com/trust-token-server/.well-known/private-state-token/key-commitment | jq -c '{"https://trust-token-server.com": .}')
+commitmentObj=$(curl --insecure https://trust-token-server.com/trust-token-server/.well-known/private-state-token/key-commitment | jq -c "{\"${TEST_ISSUER}\": .}")
 echo "commitmentObj: $commitmentObj"
 
 open -a Google\ Chrome \
